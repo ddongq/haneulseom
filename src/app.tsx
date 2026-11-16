@@ -3,7 +3,7 @@ import { useRegisterSW } from 'virtual:pwa-register/preact'
 import { PixelStage } from './gfx/PixelStage'
 import { SkyScene } from './gfx/scene'
 import { sfx, unlockAudio } from './audio/sfx'
-import { speak } from './speech/tts'
+import { preload, say } from './speech/voice'
 import { recordLaunch, requestPersist } from './store/db'
 import { Diagnostics } from './diag/Diagnostics'
 
@@ -29,6 +29,7 @@ export function App() {
 
   useEffect(() => {
     recordLaunch().catch(() => {})
+    preload(['p.greet_first', 'p.soon'])
     requestPersist().catch(() => {})
   }, [])
 
@@ -40,11 +41,11 @@ export function App() {
     if (!started) {
       setStarted(true)
       setBubble('안녕! 나는 포롱이야')
-      await speak('안녕! 나는 포롱이야. 하늘섬에 온 걸 환영해!')
+      await say('p.greet_first')
       setBubble('모험은 곧 열려요!')
     } else {
       setBubble('모험은 곧 열려요!')
-      speak('모험은 곧 열려! 조금만 기다려 줘.')
+      say('p.soon')
     }
   }
 

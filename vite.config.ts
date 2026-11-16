@@ -28,7 +28,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,png,json}'],
+        globPatterns: ['**/*.{js,css,html,png,json}', 'voice/*.mp3'],
+        globIgnores: ['voice-samples/**'],
       },
     }),
   ],

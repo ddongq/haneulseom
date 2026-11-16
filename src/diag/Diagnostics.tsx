@@ -4,6 +4,7 @@ import type { SkyScene } from '../gfx/scene'
 import { audioState, sfx, unlockAudio } from '../audio/sfx'
 import { hasTTS, loadVoices, pickVoice, setVoice, speak, type Lang } from '../speech/tts'
 import { ttsKo } from '../speech/ttsKo'
+import { say, voiceIds } from '../speech/voice'
 import { exportBackup, importBackup, isStandalone, kv, recordLaunch, requestPersist } from '../store/db'
 import { LW, LH } from '../gfx/screen'
 
@@ -31,6 +32,7 @@ export function Diagnostics(props: { scene: SkyScene; onClose: () => void }) {
   const [fps, setFps] = useState(0)
   const [stress, setStress] = useState(0)
   const [msg, setMsg] = useState('')
+  const [recorded, setRecorded] = useState<string[]>([])
 
   async function refreshEnv() {
     const est = await navigator.storage?.estimate?.().catch(() => undefined)
@@ -68,6 +70,7 @@ export function Diagnostics(props: { scene: SkyScene; onClose: () => void }) {
       setVoice('en-US', en)
       setV({ 'ko-KR': ko?.name ?? '', 'en-US': en?.name ?? '' })
     })
+    voiceIds().then(setRecorded)
     window.addEventListener('resize', refreshEnv)
     return () => window.removeEventListener('resize', refreshEnv)
   }, [])
@@ -179,7 +182,17 @@ export function Diagnostics(props: { scene: SkyScene; onClose: () => void }) {
       </div>
 
       <div class="card">
-        <h2>3. 읽어 주기 (한국어)</h2>
+        <h2>녹음된 목소리 (Chirp 3 HD · Aoede) — {recorded.length}개</h2>
+        {recorded.length === 0 && <p class="sub">아직 녹음 파일이 없어요. 녹음이 없으면 아래 기기 목소리로 읽어요.</p>}
+        <div class="row">
+          {recorded.map((id) => (
+            <button onClick={async () => { await unlockAudio(); say(id) }}>{id.replace(/^[pke]\./, '')}</button>
+          ))}
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>3. 기기 목소리 (한국어, 녹음 없는 문장용)</h2>
         <div class="row">
           <select value={voice['ko-KR']} onChange={(e) => chooseVoice('ko-KR', (e.target as HTMLSelectElement).value)}>
             {koVoices.length === 0 && <option value="">한국어 목소리 없음</option>}
@@ -194,7 +207,7 @@ export function Diagnostics(props: { scene: SkyScene; onClose: () => void }) {
       </div>
 
       <div class="card">
-        <h2>4. 읽어 주기 (영어, 김태은 L9~L11)</h2>
+        <h2>4. 기기 목소리 (영어, 비교용)</h2>
         <div class="row">
           <select value={voice['en-US']} onChange={(e) => chooseVoice('en-US', (e.target as HTMLSelectElement).value)}>
             {enVoices.length === 0 && <option value="">영어 목소리 없음</option>}

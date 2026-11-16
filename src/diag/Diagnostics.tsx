@@ -7,6 +7,7 @@ import { ttsKo } from '../speech/ttsKo'
 import { say, voiceIds } from '../speech/voice'
 import { exportBackup, importBackup, isStandalone, kv, recordLaunch, requestPersist } from '../store/db'
 import { LW, LH } from '../gfx/screen'
+import { loadProfile, saveProfile } from '../store/profile'
 
 // M0 iPad 호환 점검 화면. 결과를 "호환표" 텍스트로 복사해 기획에 반영한다.
 
@@ -166,6 +167,12 @@ export function Diagnostics(props: { scene: SkyScene; onClose: () => void }) {
           <button onClick={async () => { await requestPersist(); refreshEnv() }}>영구 저장 요청</button>
           <button onClick={async () => { await recordLaunch(); refreshEnv() }}>실행 횟수 +1</button>
           <button onClick={refreshEnv}>새로 확인</button>
+          <button onClick={async () => {
+            const pr = await loadProfile()
+            pr.today.sessionDone = false
+            await saveProfile(pr)
+            setMsg('오늘 모험을 한 번 더 할 수 있게 했어요. (별가루 하루 상한은 그대로)')
+          }}>오늘 모험 다시 열기 (테스트)</button>
         </div>
         <p class="sub">홈 화면 앱으로 연 뒤 며칠 동안 '실행 횟수'가 유지되는지 봐 주세요.</p>
       </div>

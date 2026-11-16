@@ -3,8 +3,10 @@ import { useRegisterSW } from 'virtual:pwa-register/preact'
 import { PixelStage } from './gfx/PixelStage'
 import { SkyScene } from './gfx/scene'
 import { sfx, unlockAudio } from './audio/sfx'
-import { preload, say } from './speech/voice'
+import { say } from './speech/voice'
 import { recordLaunch, requestPersist } from './store/db'
+import { loadProfile, type Profile } from './store/profile'
+import { Session } from './session/Session'
 import { Diagnostics } from './diag/Diagnostics'
 
 /**
@@ -35,49 +37,78 @@ function AutoUpdate(props: { busy: boolean }) {
 }
 
 export function App() {
-  const [view, setView] = useState<'home' | 'diag'>('home')
+  const [view, setView] = useState<'home' | 'session' | 'diag'>('home')
   const [scene] = useState(() => new SkyScene())
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [bubble, setBubble] = useState('톡 눌러서 시작해요')
-  const [started, setStarted] = useState(false)
+  const [greeted, setGreeted] = useState(false)
 
   useEffect(() => {
     recordLaunch().catch(() => {})
-    preload(['p.greet_first', 'p.soon'])
     requestPersist().catch(() => {})
+    loadProfile().then(setProfile)
   }, [])
+
+  const doneToday = !!profile?.today.sessionDone
+
+  useEffect(() => {
+    if (doneToday) setBubble('포롱은 쿨쿨… 내일 또 만나요')
+  }, [doneToday])
 
   async function start() {
     // iOS: 소리·음성 잠금 해제는 반드시 이 탭 안에서
     await unlockAudio()
     sfx.sparkle()
     scene.burst(128, 140, 40)
-    if (!started) {
-      setStarted(true)
-      setBubble('안녕! 나는 포롱이야')
-      await say('p.greet_first')
-      setBubble('모험은 곧 열려요!')
-    } else {
-      setBubble('모험은 곧 열려요!')
-      say('p.soon')
+    if (!profile) return
+    if (doneToday) {
+      setBubble('오늘 모험은 끝났어요. 내일 만나요!')
+      say('p.sleep')
+      return
     }
+    if (!greeted) {
+      setGreeted(true)
+      setBubble('안녕! 나는 포롱이야')
+      await say(profile.sessions === 0 ? 'p.greet_first' : 'p.greet_back')
+    }
+    setView('session')
   }
 
-  if (view === 'diag') return <Diagnostics scene={scene} onClose={() => setView('home')} />
+  if (view === 'diag')
+    return (
+      <Diagnostics
+        scene={scene}
+        onClose={() => { loadProfile().then(setProfile); setView('home') }}
+      />
+    )
 
   return (
     <>
       <PixelStage scene={scene} />
-      <div class="overlay">
-        <h1 class="title">하늘섬 탐험일지</h1>
-        <div class="speech">{bubble}</div>
-      </div>
-      <button class="big-btn" onClick={start}>
-        {started ? '오늘의 모험 ▶' : '시작하기 ▶'}
-      </button>
-      <button class="corner-btn" onClick={() => setView('diag')} aria-label="어른용 점검">
-        ⚙︎ 점검
-      </button>
-      <AutoUpdate busy={false} />
+      {view === 'session' && profile ? (
+        <Session
+          profile={profile}
+          scene={scene}
+          onDone={(p) => { setProfile({ ...p }); setView('home') }}
+        />
+      ) : (
+        <>
+          <div class="overlay">
+            <h1 class="title">하늘섬 탐험일지</h1>
+            <div class="speech">{bubble}</div>
+            {profile && (
+              <div class="stardust-pill">별가루 {profile.stardust}</div>
+            )}
+          </div>
+          <button class={`big-btn ${doneToday ? 'sleep' : ''}`} onClick={start}>
+            {doneToday ? '내일 또 만나요' : greeted ? '오늘의 모험 ▶' : '시작하기 ▶'}
+          </button>
+          <button class="corner-btn" onClick={() => setView('diag')} aria-label="어른용 점검">
+            ⚙︎ 점검
+          </button>
+        </>
+      )}
+      <AutoUpdate busy={view === 'session'} />
     </>
   )
 }

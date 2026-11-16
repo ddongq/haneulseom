@@ -1,0 +1,42 @@
+{
+  "groups": [
+    {
+      "id": "porong",
+      "title": "포롱 (한국어)",
+      "text": "안녕! 나는 포롱이야. 하늘섬에 온 걸 환영해! 와, 정답이야! 나눗셈 수정이 반짝반짝 빛나고 있어.",
+      "voices": [
+        "ko-KR-Chirp3-HD-Zephyr",
+        "ko-KR-Chirp3-HD-Leda",
+        "ko-KR-Chirp3-HD-Aoede",
+        "ko-KR-Chirp3-HD-Kore",
+        "ko-KR-Chirp3-HD-Callirrhoe",
+        "ko-KR-Chirp3-HD-Puck"
+      ]
+    },
+    {
+      "id": "hint",
+      "title": "틀렸을 때 (한국어)",
+      "text": "괜찮아, 다시 해 보자. 팔십사를 사로 나누면, 먼저 팔을 사로 나눠 볼까?",
+      "voices": [
+        "ko-KR-Chirp3-HD-Zephyr",
+        "ko-KR-Chirp3-HD-Leda",
+        "ko-KR-Chirp3-HD-Aoede",
+        "ko-KR-Chirp3-HD-Kore",
+        "ko-KR-Chirp3-HD-Callirrhoe",
+        "ko-KR-Chirp3-HD-Puck"
+      ]
+    },
+    {
+      "id": "english",
+      "title": "영어 (김태은 L9~L10)",
+      "rate": 0.85,
+      "text": "Can you swim? Yes, I can. She's my mom. He's my dad.",
+      "voices": [
+        "en-US-Chirp3-HD-Zephyr",
+        "en-US-Chirp3-HD-Leda",
+        "en-US-Chirp3-HD-Aoede",
+        "en-US-Chirp3-HD-Puck"
+      ]
+    }
+  ]
+}

@@ -25,6 +25,21 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # 미리 녹음한 음성: 바뀐 문장만 새로 녹음하도록 결과를 캐시한다
+      - uses: actions/cache@v4
+        with:
+          path: |
+            public/voice
+            public/voice-samples
+          key: voice-${{ hashFiles('scripts/voice/*.json', 'scripts/voice/gen.py') }}
+          restore-keys: voice-
+      - name: Record voice (Chirp 3 HD)
+        env:
+          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+        run: |
+          if [ -z "$GOOGLE_TTS_API_KEY" ]; then echo "no TTS key, skipping voice"; exit 0; fi
+          python3 scripts/voice/gen.py samples
+          if [ -f scripts/voice/lines.json ]; then python3 scripts/voice/gen.py build; fi
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

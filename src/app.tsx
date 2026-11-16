@@ -7,18 +7,31 @@ import { preload, say } from './speech/voice'
 import { recordLaunch, requestPersist } from './store/db'
 import { Diagnostics } from './diag/Diagnostics'
 
-function UpdateBar() {
+/**
+ * 새 버전 자동 적용.
+ * 홈 화면 앱은 껐다 켜지 않으면 업데이트를 확인하지 않으므로,
+ * 앱이 앞으로 나올 때마다(그리고 30분마다) 새 버전을 확인하고,
+ * 학습 중이 아니면(busy=false) 바로 바꾼다. 학습 중이면 끝난 뒤 바꾼다.
+ */
+function AutoUpdate(props: { busy: boolean }) {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
-  } = useRegisterSW()
+  } = useRegisterSW({
+    onRegisteredSW(_url, r) {
+      if (!r) return
+      const check = () => r.update().catch(() => {})
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') check()
+      })
+      setInterval(check, 30 * 60 * 1000)
+    },
+  })
+  useEffect(() => {
+    if (needRefresh && !props.busy) updateServiceWorker(true)
+  }, [needRefresh, props.busy])
   if (!needRefresh) return null
-  return (
-    <div class="update-bar">
-      새 버전이 있어요
-      <button onClick={() => updateServiceWorker(true)}>새로 고침</button>
-    </div>
-  )
+  return <div class="update-bar">새 버전으로 바꾸는 중…</div>
 }
 
 export function App() {
@@ -64,7 +77,7 @@ export function App() {
       <button class="corner-btn" onClick={() => setView('diag')} aria-label="어른용 점검">
         ⚙︎ 점검
       </button>
-      <UpdateBar />
+      <AutoUpdate busy={false} />
     </>
   )
 }
